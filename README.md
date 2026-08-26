@@ -1,5 +1,42 @@
 <div align="center">
 
+<img width="100%" src="docs/assets/sonoxo-ecosystem-orbit.svg" alt="OSIRIS GLOBAL VIEW animated system flow" />
+
+# OSIRIS GLOBAL VIEW
+
+### OSIRIS brings multiple public-data feeds into a Next.js and MapLibre dashboard for human-led situational awareness.
+
+[Beginner map](#beginner-map) · [Original documentation](#original-documentation)
+
+</div>
+
+## Beginner map
+
+**01 — Choose a public layer** → **02 — Request its source API** → **03 — Normalize the response** → **04 — Render it on the map** → **05 — Review context and provenance**
+
+| Signal | What it means |
+|---|---|
+| **Input** | The starting request, file, data, or question |
+| **Core** | The project’s main processing or navigation step |
+| **Output** | The result a person reviews or uses |
+| **Verification** | Check source, configuration, test evidence, maintenance, and license before relying on it |
+
+> [!IMPORTANT]
+> **Repository status:** Fork or mirror of the linked OSIRIS project. The original README links to `simplifaisoul/osiris` for issues and feature requests. Original authorship, external data-source terms, and the MIT license remain controlling.
+
+<details>
+<summary><strong>Accessible motion</strong></summary>
+
+The SVG includes descriptive text and automatically disables animation when **Reduce Motion** is enabled. It uses no JavaScript, trackers, autoplay video, or external image host.
+
+</details>
+
+---
+
+## Original documentation
+
+<div align="center">
+
 # ⬡ OSIRIS
 
 ### Open Source Intelligence & Reconnaissance Integrated System
