@@ -5,6 +5,18 @@ export const revalidate = 0;
 
 const ALLOWED_OBJECT_CLASSES = new Set(['person', 'vehicle', 'animal', 'other']);
 const MAX_PAGE_SIZE = 1000;
+const SELECTED_PROPERTIES = [
+  'cameraId',
+  'trackId',
+  'objectClass',
+  'confidence',
+  'timestamp',
+  'latitude',
+  'longitude',
+  'heading',
+  'zoneId',
+  'clipUrl',
+] as const;
 
 type CameraTrack = {
   cameraId: string;
@@ -52,24 +64,31 @@ function readHttpsUrl(value: unknown): string | undefined {
 }
 
 function normalizeTrack(row: Record<string, unknown>): CameraTrack | null {
-  const cameraId = readString(row.cameraId, 128);
-  const trackId = readString(row.trackId ?? row.__primaryKey, 128);
-  const latitude = readNumber(row.latitude ?? row.lat);
-  const longitude = readNumber(row.longitude ?? row.lng ?? row.lon);
-  const timestamp = readTimestamp(row.timestamp);
+  const properties = row.properties;
+  const p = properties && typeof properties === 'object' && !Array.isArray(properties)
+    ? properties as Record<string, unknown>
+    : row;
+
+  const cameraId = readString(p.cameraId, 128);
+  const trackId = readString(p.trackId ?? row.__primaryKey, 128);
+  const latitude = readNumber(p.latitude ?? p.lat);
+  const longitude = readNumber(p.longitude ?? p.lng ?? p.lon);
+  const timestamp = readTimestamp(p.timestamp);
 
   if (!cameraId || !trackId || latitude === undefined || longitude === undefined || !timestamp) return null;
   if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
 
-  const rawClass = (readString(row.objectClass, 32) || 'other').toLowerCase();
+  const rawClass = (readString(p.objectClass, 32) || 'other').toLowerCase();
   const objectClass = ALLOWED_OBJECT_CLASSES.has(rawClass)
     ? rawClass as CameraTrack['objectClass']
     : 'other';
 
-  const confidenceRaw = readNumber(row.confidence) ?? 0;
+  const confidenceRaw = readNumber(p.confidence) ?? 0;
   const confidence = Math.min(1, Math.max(0, confidenceRaw));
-  const headingRaw = readNumber(row.heading);
+  const headingRaw = readNumber(p.heading);
   const heading = headingRaw === undefined ? undefined : ((headingRaw % 360) + 360) % 360;
+  const zoneId = readString(p.zoneId, 128);
+  const clipUrl = readHttpsUrl(p.clipUrl);
 
   return {
     cameraId,
@@ -79,8 +98,8 @@ function normalizeTrack(row: Record<string, unknown>): CameraTrack | null {
     timestamp,
     position: { lat: latitude, lon: longitude },
     ...(heading === undefined ? {} : { heading }),
-    ...(readString(row.zoneId, 128) ? { zoneId: readString(row.zoneId, 128) } : {}),
-    ...(readHttpsUrl(row.clipUrl) ? { clipUrl: readHttpsUrl(row.clipUrl) } : {}),
+    ...(zoneId ? { zoneId } : {}),
+    ...(clipUrl ? { clipUrl } : {}),
   };
 }
 
@@ -111,6 +130,7 @@ export async function GET() {
     url.searchParams.set('pageSize', String(MAX_PAGE_SIZE));
     url.searchParams.set('orderBy', 'properties.timestamp:desc');
     url.searchParams.set('excludeRid', 'true');
+    SELECTED_PROPERTIES.forEach(property => url.searchParams.append('select', property));
 
     const response = await fetch(url, {
       headers: {
